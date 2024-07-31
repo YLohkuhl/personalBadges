@@ -1,6 +1,6 @@
 # PersonalBadges
 
-> Create badges that are **exclusively** visible to you through JSON.
+> Create profile badges that are **exclusively** visible to you through JSON.
 
 ![Settings](github/images/settings.png)
 
