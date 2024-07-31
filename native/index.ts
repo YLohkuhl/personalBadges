@@ -6,8 +6,7 @@
 
 import { access, mkdir } from 'fs/promises';
 
-import { BADGE_DATA_DIR, fetchBadgeData } from './data';
-
+import { BADGE_DATA_DIR, getBadgeDataDir, fetchBadgeData } from './data';
 
 async function pathExists(path: string) {
     try {
@@ -23,4 +22,4 @@ export async function initDataDir() {
         mkdir(BADGE_DATA_DIR)
 }
 
-export { fetchBadgeData };
+export { fetchBadgeData, getBadgeDataDir };

@@ -12,9 +12,10 @@ import definePlugin, { PluginNative } from "@utils/types";
 
 import { IPersonalBadge } from "./types";
 import { GITHUB_URL, PluginLogger } from "./utils/constants";
+import { pluginSettings } from "./utils/settings";
 
 
-export const PERS_BADGE_REGISTRY: ProfileBadge[] = [];
+export const BADGE_REGISTRY: ProfileBadge[] = [];
 
 
 export default definePlugin({
@@ -24,41 +25,23 @@ export default definePlugin({
         name: "YLohkuhl",
         id: 1204700402235478078n
     }],
+    settings: pluginSettings,
+
+    toolboxActions: {
+        "Update Badges": async () => await re_registerBadges()
+    },
+    
     async start()
     {
-        Native.initDataDir()
-
-        try {
-            const fetchedData = await Native.fetchBadgeData();
-
-            fetchedData.forEach((data) => {
-                data.forEach((badge) => {
-                    PERS_BADGE_REGISTRY.push
-                    ({
-                        image: badge.image,
-                        description: badge.tooltip,
-                        position: defineBadgePosition(badge.position),
-                        link: badge.link || GITHUB_URL,
-                        shouldShow: ({ userId }) => isUserIncluded(userId, badge),
-                        props: {
-                            style: {
-                                borderRadius: "50%",
-                                transform: "scale(0.9)"
-                            }
-                        }
-                    })  
-                })
-            })
-    
-            PERS_BADGE_REGISTRY.forEach((badge) => Vencord.Api.Badges.addBadge(badge));
-            
-            PluginLogger.info("Badges were successfully registered.")
-        } catch (error) {
-            PluginLogger.error(error);
-            PluginLogger.warn("Could not successfully register badges.")
-        }
+        Native.initDataDir();
+        await registerBadges();
+    },
+    stop()
+    {
+        de_registerBadges();
     }
 });
+
 
 export function isUserIncluded(userId: string, badge: IPersonalBadge): boolean {
     return badge.global || badge.users?.includes(userId) ? (badge.excluded?.includes(userId) ? false : true) : false;
@@ -67,4 +50,59 @@ export function isUserIncluded(userId: string, badge: IPersonalBadge): boolean {
 export function defineBadgePosition(position: string | undefined): BadgePosition {
     const upper = position?.toUpperCase();
     return upper == "START" ? BadgePosition.START : (upper == "END" ? BadgePosition.END : BadgePosition.START);
+}
+
+export async function registerBadges() {
+    try {
+        const fetchedData = await Native.fetchBadgeData();
+
+        fetchedData.forEach((data) => {
+            data.forEach((badge) => {
+                
+                let badgeObject = {
+                    image: badge.image,
+                    description: badge.tooltip,
+                    position: defineBadgePosition(badge.position),
+                    link: badge.link || GITHUB_URL,
+                    shouldShow: ({ userId }) => isUserIncluded(userId, badge),
+                    props: {
+                        style: {
+                            borderRadius: "50%",
+                            transform: "scale(0.9)"
+                        }
+                    }
+                };
+
+                BADGE_REGISTRY.push(badgeObject);
+            });
+        });
+        
+        BADGE_REGISTRY.forEach((badge) => 
+            Vencord.Api.Badges.addBadge(badge)
+        );
+        
+        PluginLogger.info("Badges were successfully registered.");
+    } catch (error) {
+        PluginLogger.error(error);
+        PluginLogger.warn("Could not successfully register badges.");
+    }
+}
+
+export function de_registerBadges() {
+    try {
+        BADGE_REGISTRY.forEach((badge) =>
+            Vencord.Api.Badges.removeBadge(badge)
+        );
+        BADGE_REGISTRY.length = 0;
+
+        PluginLogger.info("Badges were successfully deregistered.");
+    } catch (error) {
+        PluginLogger.error(error);
+        PluginLogger.warn("Could not successfully deregister badges.");
+    }
+}
+
+export async function re_registerBadges() {
+    de_registerBadges();
+    await registerBadges();
 }

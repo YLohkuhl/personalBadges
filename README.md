@@ -7,13 +7,21 @@
 ![Preview](github/images/preview.png)
 
 #### Want to install this plugin?
-> https://docs.vencord.dev/installing/custom-plugins/
+> **https://docs.vencord.dev/installing/custom-plugins/**
 
 ## Usage
 
 Once the plugin is enabled, you should *immediately* have a directory created within your `%AppData%/Roaming/Vencord` folder named `badges` .
 
-Navigate to this directory and to begin creating your first badge, you must create a `.json` file. The name does not matter, **but the contents do**.
+- If you try to edit the 'settings' of the plugin by clicking on the cog wheel, you should see a few buttons. Click on the button that says `Locate Badges Folder` and it should take you directly to where the `badges` directory is located.
+
+![Buttons](github/images/buttons.png)
+
+*Or if you so truly desire to take an alternative route . . .*
+
+- Navigate to this directory manually by accessing `%AppData%` or wherever your Vencord data may be stored on your system. Find the `Vencord` folder and inside should be `badges`.
+
+To begin creating your first badge, you must create a `.json` file. The name does not matter, **but the contents do**.
 
 ### Badge Properties
 
@@ -39,7 +47,7 @@ Navigate to this directory and to begin creating your first badge, you must crea
         "tooltip": "Sparkly ✨",
         "position": "start",
         "link": "https://github.com/YLohkuhl/personalBadges",
-        "users": ["USER_ID_HERE_THOUGH_IT_GETS_OVERRIDDEN_ANYWAYS"],
+        "users": ["USER_ID_HERE_THOUGH_IT_GETS_OVERRIDDEN_ANYWAYS", "MAYBE_ANOTHER_ONE"],
         "global": true,
         "excluded": ["USER_ID_IN_QUOTATION_MARKS_ONLY"]
     }
@@ -55,5 +63,7 @@ If you want, *you could* share these files with other users who you'd like to se
 ✨ **Thank you for using my plugin if you decided to do so!** ✨
 
 <sub>**Notice!** I may not have to mention this but you know... if you go haywire when adding a ton of badges to a user, might not look so good with the UI. That takes *a lot* of badges for that though... *maybe fix it with some CSS, idk*.</sub>
+
+<sub>**Another Notice!** If you want to update your badges without refreshing / restarting Discord; use the `Update Badges` button in the settings. Enabling the `VencordToolbox` plugin; it will have an option to do this as well for ease of access.</sub>
 
 <sub><i>. . . This is my first plugin for Vencord-</i></sub>

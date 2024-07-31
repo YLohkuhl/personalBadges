@@ -15,6 +15,10 @@ import { IPersonalBadge } from '../types';
 export const BADGE_DATA_DIR = join(DATA_DIR, "badges")
 
 
+export async function getBadgeDataDir(): Promise<string> {
+    return BADGE_DATA_DIR;
+}
+
 export async function fetchBadgeData(): Promise<IPersonalBadge[][]> {
     const dir = await readdir(BADGE_DATA_DIR);
 
