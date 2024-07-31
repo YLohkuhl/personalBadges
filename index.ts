@@ -19,7 +19,7 @@ export const PERS_BADGE_REGISTRY: ProfileBadge[] = [];
 
 export default definePlugin({
     name: "PersonalBadges",
-    description: "Create badges that are exclusively visible to you through JSON.",
+    description: "Create profile badges that are exclusively visible to you through JSON.",
     authors: [{
         name: "YLohkuhl",
         id: 1204700402235478078n
