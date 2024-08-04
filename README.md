@@ -25,11 +25,11 @@ To begin creating your first badge, you must create a `.json` file. The name doe
 
 ### Badge Properties
 
-| Property | Description | Required |
+| Property | Description | Required? |
 | --- | --- | --- |
 | `image` | An **image link** that is set for the badge. I don't think the file type matters; feel free to use gifs, etc. | `false` |
 | `tooltip` | The **tooltip / description** that appears when hovering over the badge. | `false` |
-| `position` | The **badge position** of which can be either `START` or `END`. It is *case-insensitive*. | `false` |
+| `position` | The **badge position** of which can be either `START` or `END`, by default it is `START`. It is also *case-insensitive*. | `false` |
 | `link` | A **link** that is opened upon clicking the badge. If this is not set by default, it will link to this repository. :] | `false` |
 | `users` | An array of **users** listed by **ID** that **will have** this badge. *No, they cannot see it.* | `true` **if global is not set.**|
 | `global` | Whether or not the badge is **globally** visible. This just means it's added to everyone; *it will* override `users`. | `true` **if users is not set.** |

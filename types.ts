@@ -11,5 +11,7 @@ export interface IPersonalBadge {
     link?: string,
     users: string[],
     global: boolean,
-    excluded?: string[]
+    excluded?: string[],
+    
+    path?: string
 }

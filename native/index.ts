@@ -4,22 +4,16 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
 */
 
-import { access, mkdir } from 'fs/promises';
+import { mkdir } from 'fs/promises';
 
-import { BADGE_DATA_DIR, getBadgeDataDir, fetchBadgeData } from './data';
+import * as data from './data';
+import * as util from './util';
 
-async function pathExists(path: string) {
-    try {
-        await access(path);
-        return true;
-    } catch (error) {
-        return false;
-    }
+export * from './data';
+export * from './util';
+
+
+export async function initBadgeDataDir() {
+    if (!await util.canAccessPath(null, await data.getBadgesDataDir()))
+        mkdir(await data.getBadgesDataDir())
 }
-
-export async function initDataDir() {
-    if (!await pathExists(BADGE_DATA_DIR))
-        mkdir(BADGE_DATA_DIR)
-}
-
-export { fetchBadgeData, getBadgeDataDir };

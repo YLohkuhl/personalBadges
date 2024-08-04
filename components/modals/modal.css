@@ -1,0 +1,13 @@
+.pb-modal-form {
+    display: flex;
+    gap: 13px;
+}
+
+.pb-modal-header {
+    justify-content: center;
+    padding: 15px;
+}
+
+.pb-modal-footer {
+    padding: 6px;
+}
