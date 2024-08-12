@@ -4,43 +4,56 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
 */
 
-export const Native = VencordNative.pluginHelpers.PersonalBadges as PluginNative<typeof import("./native")>;
+import definePlugin from "@utils/types";
+import { classNameFactory } from "@api/Styles";
 
-
-import definePlugin, { PluginNative } from "@utils/types";
-
+import { BadgeHandler } from "./utils/badge/data";
 import { pluginSettings } from "./utils/settings";
-import { addContextMenuPatch } from "@api/ContextMenu";
-import { de_registerBadges, re_registerBadges, registerBadges } from "./utils/badges/registry";
-import { userContextMenuPatch_manageBadges } from "./utils/menus";
-import { showItemInFolder } from "@utils/native";
-import { openBadgeCreationModal } from "./components/modals/BadgeCreationModal";
+import { PluginLogger } from "./utils/constants";
+import { patchGuildContext, patchUserContext } from "./utils/context";
+import { IPersonalBadge } from "./types";
+
+
+export const cl = classNameFactory("pb-");
 
 
 export default definePlugin({
     name: "PersonalBadges",
-    description: "Create profile badges that are exclusively visible to you through JSON.",
+    description: "Create profile badges that are exclusively visible to you through locally stored data.",
     authors: [{
         name: "YLohkuhl",
         id: 1204700402235478078n
     }],
+    dependencies: ["BadgeAPI"],
     settings: pluginSettings,
+    
+    // patches: [
+    //     {
+    //         find: "toolbar:function",
+    //         replacement: {
+    //             match: /(function \i\(\i\){)(.{1,200}toolbar.{1,100}mobileToolbar)/,
+    //             replace: "$1$self.ApplyButtonToToolbar(arguments[0]);$2"
+    //         }
+    //     },
+    // ],
 
     toolboxActions: {
-        "Refresh Badges": async () => await re_registerBadges(),
-        "Locate Folder": async () => await showItemInFolder(await Native.getBadgesDataDir()),
-        "View Modal": async () => openBadgeCreationModal()
+        "Refresh Badges": async () => await BadgeHandler.re_init()
     },
 
     async start()
     {
-        await Native.initBadgeDataDir();
-        await registerBadges();
-        
-        addContextMenuPatch("user-context", userContextMenuPatch_manageBadges)
+        await BadgeHandler.init();
+
+        PluginLogger.log(BadgeHandler.getCache());
+
+        patchUserContext();
+        patchGuildContext();
     },
     stop()
     {
-        de_registerBadges();
-    }
+        BadgeHandler.de_init();
+    },
+
+    // ApplyButtonToToolbar: ApplyButtonToToolbar
 });

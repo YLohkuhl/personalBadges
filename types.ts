@@ -5,13 +5,18 @@
 */
 
 export interface IPersonalBadge {
+    id: string,
+
     image?: string,
     tooltip?: string,
     position?: string,
     link?: string,
-    users: string[],
-    global: boolean,
-    excluded?: string[],
+    squircle: boolean,
     
-    path?: string
+    global: boolean,
+    users?: string[],
+    excluded?: string[],
+    guilds?: string[]
+    
+    // path?: string
 }

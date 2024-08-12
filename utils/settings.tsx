@@ -4,40 +4,59 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
 */
 
-import { definePluginSettings } from "@api/Settings";
-import { OptionType } from "@utils/types";
-import { showItemInFolder } from "@utils/native";
-import { Button, Forms } from "@webpack/common";
+import '../styles.css';
 
-import { Native } from "..";
-import { re_registerBadges } from "./badges/registry";
+import { definePluginSettings } from "@api/Settings";
+import { Button, Forms } from "@webpack/common";
+import { OptionType } from "@utils/types";
+
+import { cl } from '..';
+import { GITHUB_URL } from './constants';
+import { BadgeHandler } from './badge/data';
 
 
 export const pluginSettings = definePluginSettings({
     pluginButtons: {
         type: OptionType.COMPONENT,
-        description: "PersonalBadges Buttons",
+        description: "PBButtons",
         component: () => {
             return (
                 <Forms.FormSection>
-                    {/* <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <Button style={{ marginRight: "10px" }} 
-                            onClick={async () => showItemInFolder(await Native.getBadgesDataDir())}
-                        >
-                            Locate Badges Folder
-                        </Button>
-                        <Button style={{ marginRight: "10px" }} color={Button.Colors.GREEN} 
-                            onClick={async () => await re_registerBadges()}
-                        >
+                    <div className={cl('button-grid')}>
+
+                        <Button onClick={async () => await BadgeHandler.re_init()}>
                             Refresh Badges
                         </Button>
-                        <Button 
-                            color={Button.Colors.PRIMARY} 
-                            onClick={async () => await VencordNative.native.openExternal("https://github.com/YLohkuhl/personalBadges?tab=readme-ov-file#usage")}
-                        >
-                            How To Use
+
+                    </div>
+
+                    <Forms.FormDivider className={cl('form-divider')}/>
+                    <Forms.FormTitle className={cl('form-title')} tag="h2">Badges</Forms.FormTitle>
+                    
+                    <div className={cl('button-grid')}>
+                        
+                        <Button color={Button.Colors.GREEN}>
+                            Create Badge
                         </Button>
-                    </div> */}
+                        <Button>
+                            Modify Badge
+                        </Button>
+                        <Button color={Button.Colors.RED}>
+                            Delete Badge
+                        </Button>
+
+                    </div>
+
+                    <Forms.FormDivider className={cl('form-divider')}/>
+                    <Forms.FormTitle className={cl('form-title')} tag="h2">Misc</Forms.FormTitle>
+
+                    <div className={cl('button-grid')}>
+
+                        <Button color={Button.Colors.PRIMARY} onClick={async () => await VencordNative.native.openExternal(GITHUB_URL)}>
+                            GitHub
+                        </Button>
+
+                    </div>
                 </Forms.FormSection>
             )
         }

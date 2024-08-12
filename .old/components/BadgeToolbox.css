@@ -1,0 +1,16 @@
+/* .pb-toolbox-btn,
+.pb-toolbox-btn > svg {
+    -webkit-app-region: no-drag;
+}
+
+.pb-toolbox-btn > svg {
+    color: var(--interactive-normal);
+}
+
+.pb-toolbox-btn[class*="selected"] > svg {
+    color: var(--interactive-active);
+}
+
+.pb-toolbox-btn:hover > svg {
+    color: var(--interactive-hover);
+} */

@@ -5,13 +5,14 @@
 */
 
 import "./modal.css";
+import "../../styles.css";
 
 import { Margins } from "@utils/margins";
 import { ModalContent, ModalFooter, ModalHeader, ModalProps, ModalRoot, ModalSize, openModal } from "@utils/modal";
 import { Button, Forms, Select, Text, TextInput } from "@webpack/common";
 import { Link } from "@components/Link";
 
-import { cl } from "..";
+import { cl } from "../..";
 import { GITHUB_URL } from "../../utils/constants";
 
 
@@ -66,7 +67,7 @@ function BadgeCreationModal(props: ModalProps) {
 
             </div>
 
-            <Forms.FormDivider style={{ marginTop: "16px", marginBottom: "16px" }}/>
+            <Forms.FormDivider className={cl('form-divider')}/>
 
             <div className={cl('modal-form')}>
 
