@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
 */
 
-import BadgeHandler from './handler';
+import BadgeHandler, { CategoryHandler } from './handler';
 
 export * from './store';
-export { BadgeHandler }
+export { BadgeHandler, CategoryHandler }

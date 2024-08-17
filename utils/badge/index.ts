@@ -14,8 +14,20 @@ export function isExcluded(userId: string, badge: IPersonalBadge): boolean {
     return badge.excluded?.includes(userId) ? false : true; 
 }
 
+export function defineProfileBadge(profileBadge: ProfileBadge | undefined): ProfileBadge {
+    return profileBadge ?? {};
+}
+
+export function defineLink(link: string | undefined): string {
+    return !link || link === "" ? GITHUB_URL : link;
+}
+
 export function defineImage(image: string | undefined): string {
-    return !image ? DEFAULT_BADGE_URL : image;
+    return !image || image === "" ? DEFAULT_BADGE_URL : image;
+}
+
+export function defineTooltip(tooltip: string | undefined): string | undefined {
+    return !tooltip || tooltip === "" ? undefined : tooltip;
 }
 
 export function definePosition(position: string | undefined): BadgePosition {
@@ -24,7 +36,7 @@ export function definePosition(position: string | undefined): BadgePosition {
 }
 
 export function defineInclusion(userId: string, guildId: string, badge: IPersonalBadge): boolean {
-    let excluded = isExcluded(userId, badge);
+    const excluded = isExcluded(userId, badge);
     return badge.global ? excluded : (badge.guilds?.includes(guildId) ? excluded : (badge.users?.includes(userId) ? excluded : false));
 }
 
@@ -38,9 +50,9 @@ export function defineStyleProps(squircle: boolean) {
 export function iPersonalToProfile(i: IPersonalBadge): ProfileBadge {
     return {
         image: defineImage(i.image),
-        description: i.tooltip,
+        description: defineTooltip(i.tooltip),
         position: definePosition(i.position),
-        link: i.link || GITHUB_URL,
+        link: defineLink(i.link),
         shouldShow: ({ userId, guildId }) => defineInclusion(userId, guildId, i),
         props: { style: defineStyleProps(i.squircle) }
     }

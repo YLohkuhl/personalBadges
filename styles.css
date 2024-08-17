@@ -13,4 +13,9 @@
     text-align: center;
     user-select: none;
     margin-bottom: 16px;
+    gap: 13px;
+}
+
+.pb-fixed-select-width {
+    width: 22.2%;
 }

@@ -4,29 +4,111 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
 */
 
-import { ProfileBadge } from "@api/Badges";
-
 import { PluginLogger } from "../../../utils/constants";
-import { IPersonalBadge } from "../../../types";
-import { iPersonalToProfile } from "..";
+import { IPBadgeCategory, IPersonalBadge } from "../../../types";
+import { defineProfileBadge, iPersonalToProfile } from "..";
 
 import * as BadgeStore from '.';
 
 
-const cache = new Map<string, [IPersonalBadge, ProfileBadge]>();
+const cache = new Map<string, IPBadgeCategory>();
 
+
+export const CategoryHandler = (new class {
+
+    public getCache(): Map<string, IPBadgeCategory> { return cache; }
+
+    public async deregister(c_id: string): Promise<boolean> {
+        try {
+            let category = cache.get(c_id);
+            if (!category) return false;
+
+            for (let badge of category.badges)
+                await BadgeStore.BadgeHandler.deregister(c_id, badge.id);
+
+            if (await BadgeStore.deregisterCategory(c_id))
+                cache.delete(c_id);
+            else return false;
+
+            PluginLogger.info(`(${c_id}) \"${category.name}\" category successfully deregistered.`);
+            return true;
+        } catch (error) {
+            PluginLogger.warn(`Could not successfully deregister category. (${c_id})`);
+            PluginLogger.error(error);
+            return false;
+        }
+    }
+
+    public async update(value: IPBadgeCategory): Promise<boolean> {
+        try {
+            if (!value.name) return false;
+
+            let category = cache.get(value.id);
+            if (!category) return false;
+
+            if (await BadgeStore.updateCategory(value)) {
+                category.name = value.name;
+                cache.set(category.id, category);
+            } else return false;
+
+            PluginLogger.info(`(${value.id}) \"${value.name}\" category successfully updated.`);
+            return true;
+        } catch (error) {
+            PluginLogger.warn(`Could not successfully update category. (${value.id})`);
+            PluginLogger.error(error);
+            return false;
+        }
+    }
+
+    public async register(value: IPBadgeCategory): Promise<boolean> {
+        try {
+            if (Array.from(cache.entries()).some((data: [string, IPBadgeCategory]) => {
+                PluginLogger.log(data[1], value);
+
+                if (data[1].name === value.name) return true;
+                if (data[1].badges.length > 0 && value.badges.length > 0)
+                    return JSON.stringify(data[1].badges) === JSON.stringify(value.badges);
+            })) return false;
+
+            if (!value.name) return false;
+
+            if (await BadgeStore.registerCategory(value))
+                cache.set(value.id, value);
+            else return false;
+
+            PluginLogger.info(`(${value.id}) \"${value.name}\" category successfully registered.`);
+            return true;
+        } catch (error) {
+            PluginLogger.warn(`Could not successfully register category. (${value.id})`);
+            PluginLogger.error(error);
+            return false;
+        }
+    }
+
+})
 
 export default (new class BadgeHandler {
 
-    public getCache(): Map<string, [IPersonalBadge, ProfileBadge]> { return cache; }
+    public getCache(): Map<string, IPBadgeCategory> { return cache; }
 
     public async refreshCache() {
+        let count: number = 0;
+        
         try {
             const registered = await BadgeStore.registered();
-            Object.entries(registered).map((data) =>  cache.set(data[0], [data[1], iPersonalToProfile(data[1])]));
+            
+            Object.entries(registered).map((data) => {
+                for (let v of data[1].badges) {
+                    v.profileBadge = iPersonalToProfile(v);
+                    count++;
+                }
+                cache.set(data[0], data[1]);
+            });
+            
+            PluginLogger.info(`(${cache.size}|${count}) Cache successfully refreshed.`);
         } catch (error) {
+            PluginLogger.warn(`Could not successfully refresh cache. (${cache.size}|${count})`);
             PluginLogger.error(error);
-            PluginLogger.warn("Could not successfully refresh the cache.");
         }
     }
 
@@ -36,120 +118,133 @@ export default (new class BadgeHandler {
     }
 
     public de_init() {
-        try {
-            cache.forEach((badge) => Vencord.Api.Badges.removeBadge(badge[1]));
+        let count: number = 0;
 
-            PluginLogger.info(`${cache.size} badge(s) successfully deregistered.`);
+        try {
+            cache.forEach((data) => {
+                for (let badge of data.badges) {
+                    Vencord.Api.Badges.removeBadge(defineProfileBadge(badge.profileBadge));
+                    count++;
+                }
+            });
+
+            PluginLogger.info(`(${count}) Badge(s) successfully deregistered.`);
             cache.clear();
         } catch (error) {
+            PluginLogger.warn(`Could not successfully deregister badge(s). (${count})`);
             PluginLogger.error(error);
-            PluginLogger.warn("Could not successfully deregister badge(s).");
         }
     }
 
     public async init() {
+        let count: number = 0;
+        
         try {
             await this.refreshCache();
-            cache.forEach((badge) => Vencord.Api.Badges.addBadge(badge[1]));
+            cache.forEach((data) => {
+                for (let badge of data.badges) {
+                    Vencord.Api.Badges.addBadge(defineProfileBadge(badge.profileBadge));
+                    count++;
+                }
+            });
 
-            PluginLogger.info(`${cache.size} badge(s) successfully registered.`);
+            PluginLogger.info(`(${count}) Badge(s) successfully registered.`);
         } catch (error) {
+            PluginLogger.warn(`Could not successfully register badge(s). (${count})`);
             PluginLogger.error(error);
-            PluginLogger.warn("Could not successfully register badge(s).");
         }
     }
 
-    public async deregister(id: string) {
-        cache.delete(id);
-        await BadgeStore.deregister(id);
+    public async deregister(c_id: string, b_id: string, useApi: boolean = true): Promise<boolean> {
+        try {
+            let category = cache.get(c_id);
+            if (!category) return false;
+            
+            let badge = category.badges.find(x => x.id === b_id);
+            if (!badge) return false;
+            if (useApi) Vencord.Api.Badges.removeBadge(defineProfileBadge(badge.profileBadge));
+
+            if (await BadgeStore.deregisterBadge(c_id, b_id)) {
+                category.badges.splice(category.badges.indexOf(badge), 1);
+                cache.set(c_id, category);
+            } else return false;
+
+            PluginLogger.info(`(${c_id}) \"${badge.tooltip}\" (${badge.id}) badge successfully deregistered.`);
+            return true;
+        } catch (error) {
+            PluginLogger.warn(`Could not successfully deregister badge. (${c_id}) (${b_id})`);
+            PluginLogger.error(error);
+            return false;
+        }
     }
 
-    public async update(id: string, value: IPersonalBadge) {
-        cache.set(id, [value, iPersonalToProfile(value)]);
-        await BadgeStore.update(id, value);
+    public async update(c_id: string, value: IPersonalBadge, useApi: boolean = true): Promise<boolean> {
+        try {
+            const category = cache.get(c_id);
+            if (!category) return false;
+
+            let old = cache.get(value.c_id)
+            if (!old) return false;
+
+            let badge = c_id !== value.id ? old.badges.find(x => x.id === value.id) : category.badges.find(x => x.id === value.id);
+            if (!badge) return false;
+            if (useApi) Vencord.Api.Badges.removeBadge(defineProfileBadge(badge.profileBadge));
+
+            if (c_id !== value.c_id) {
+                old.badges.splice(old.badges.indexOf(badge), 1);
+                cache.set(value.c_id, old);
+            } else category.badges.splice(category.badges.indexOf(badge), 1);
+
+            if (await BadgeStore.updateBadge(c_id, value)) {
+                value.profileBadge = iPersonalToProfile(value);
+                category.badges.push(value);
+                cache.set(c_id, category);
+            } else return false;
+
+            badge = category.badges.find(x => x.id === value.id);
+            if (!badge) return false;
+            if (useApi) Vencord.Api.Badges.addBadge(defineProfileBadge(badge.profileBadge));
+
+            PluginLogger.info(`(${c_id}) \"${badge.tooltip}\" (${badge.id}) badge successfully updated.`);
+            return true;
+        } catch (error) {
+            PluginLogger.warn(`Could not successfully update badge. (${c_id}) (${value.id})`);
+            PluginLogger.error(error);
+            return false;
+        }
     }
 
-    public async register(value: IPersonalBadge) {
-        if (Array.from(cache.entries()).some((x: [string, [IPersonalBadge, ProfileBadge]]) => {
-            let {id: _, ...cached} = x[1][0];
-            let {id: __, ...object} = value;
-            return JSON.stringify(cached) === JSON.stringify(object);
-        })) return;
-        
-        await BadgeStore.register(value);
-        if (value.id) cache.set(value.id, [value, iPersonalToProfile(value)]);
+    public async register(c_id: string, value: IPersonalBadge, useApi: boolean = true): Promise<boolean> {
+        try {
+            if (Array.from(cache.entries()).some((data: [string, IPBadgeCategory]) => {
+                return data[1].badges.some(x => {
+                    let {id: _, c_id: __, profileBadge: ___, ...cached} = x;
+                    let {id: ____, c_id: _____, profileBadge: ______, ...object} = value;
+                    PluginLogger.log(cached, object);
+                    return JSON.stringify(cached) === JSON.stringify(object);
+                });
+            })) return false;
+
+            let category = cache.get(c_id);
+            if (!category) return false;
+
+            if (await BadgeStore.registerBadge(c_id, value)) {
+                value.profileBadge = iPersonalToProfile(value);
+                category.badges.push(value);
+                cache.set(c_id, category);
+            } else return false;
+
+            let badge = category.badges.find(x => x.id === value.id);
+            if (!badge) return false;
+            if (useApi) Vencord.Api.Badges.addBadge(defineProfileBadge(badge.profileBadge));
+
+            PluginLogger.info(`(${c_id}) \"${badge.tooltip}\" (${badge.id}) badge successfully registered.`);
+            return true;
+        } catch (error) {
+            PluginLogger.warn(`Could not successfully register badge. (${c_id}) (${value.id})`);
+            PluginLogger.error(error);
+            return false;
+        }
     }
 
-})
-
-// export const BADGE_REGISTRY: [IPersonalBadge[], ProfileBadge[]] = [[], []];
-
-
-// export function getBadgeRegistry(): [IPersonalBadge[], ProfileBadge[]] {
-//     return BADGE_REGISTRY;
-// }
-
-// // export function re_registerBadge(badge: IPersonalBadge) {
-// //     let index = BADGE_REGISTRY[0].findIndex(x => tryIdentifyBadge(x, badge));
-// //     if (index === -1) return;
-
-// //     let profileBadge = iPersonalToProfile(badge);
-
-// //     Vencord.Api.Badges.removeBadge(profileBadge);
-// //     Vencord.Api.Badges.addBadge(profileBadge);
-
-// //     BADGE_REGISTRY[0][index] = badge;
-// //     BADGE_REGISTRY[1][index] = profileBadge;
-// // }
-
-// export async function re_registerBadges() {
-//     de_registerBadges();
-//     await registerBadges();
-// }
-
-// export function de_registerBadges() {
-//     try {
-//         BADGE_REGISTRY[1].forEach((badge) =>
-//             Vencord.Api.Badges.removeBadge(badge)
-//         );
-        
-//         BADGE_REGISTRY[0].length = 0;
-//         BADGE_REGISTRY[1].length = 0;
-
-//         PluginLogger.info("Badge(s) successfully deregistered.");
-//     } catch (error) {
-//         PluginLogger.error(error);
-//         PluginLogger.warn("Could not successfully deregister badge(s).");
-//     }
-// }
-
-// export async function registerBadges() {
-//     try {
-//     } catch (error) {
-
-//     }
-//     // try {
-//     //     const nativeFetchedData = await Native.fetchNativeBadgeData();
-
-//     //     nativeFetchedData[1].forEach((data, index) => {
-//     //         for (let badge of data) {
-//     //             badge.path = nativeFetchedData[0][index];
-
-//     //             BADGE_REGISTRY[0].push(badge);
-//     //             BADGE_REGISTRY[1].push(iPersonalToProfile(badge));
-//     //         };
-//     //     });
-        
-//     //     const tooltips: string[] = [];
-
-//     //     BADGE_REGISTRY[1].forEach((badge, index) => {
-//     //         Vencord.Api.Badges.addBadge(badge);
-//     //         tooltips.push(!badge.description ? `PB${index}` : badge.description);
-//     //     });
-
-//     //     PluginLogger.info(`${"\"" + tooltips.join("\", \"") + "\""} badge(s) successfully registered.`);
-//     // } catch (error) {
-//     //     PluginLogger.error(error);
-//     //     PluginLogger.warn("Could not successfully register badge(s).");
-//     // }
-// }
+});

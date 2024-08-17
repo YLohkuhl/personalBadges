@@ -7,11 +7,13 @@
 import definePlugin from "@utils/types";
 import { classNameFactory } from "@api/Styles";
 
-import { BadgeHandler } from "./utils/badge/data";
 import { pluginSettings } from "./utils/settings";
-import { PluginLogger } from "./utils/constants";
-import { patchGuildContext, patchUserContext } from "./utils/context";
-import { IPersonalBadge } from "./types";
+import { BadgeHandler, CategoryHandler } from "./utils/badge/data";
+import { patchGuildContext, patchUserContext } from "./components/context";
+import { DEFAULT_BADGE_CATEGORY, PluginLogger } from "./utils/constants";
+import { openModal } from "@utils/modal";
+import { BadgeModal } from "./components/modals/badge/CreateBadgeModal";
+
 
 
 export const cl = classNameFactory("pb-");
@@ -38,12 +40,15 @@ export default definePlugin({
     // ],
 
     toolboxActions: {
-        "Refresh Badges": async () => await BadgeHandler.re_init()
+        "Refresh Badges": async () => await BadgeHandler.re_init(),
+        "Open Modal": () => openModal(props => <BadgeModal props={props} />)
     },
 
     async start()
     {
         await BadgeHandler.init();
+        await CategoryHandler.register({id: "", name: DEFAULT_BADGE_CATEGORY, badges: []});
+
 
         PluginLogger.log(BadgeHandler.getCache());
 
