@@ -5,15 +5,14 @@
 */
 
 import definePlugin from "@utils/types";
+import { openModal } from "@utils/modal";
 import { classNameFactory } from "@api/Styles";
 
 import { pluginSettings } from "./utils/settings";
+import { BadgeModal } from "./components/modals/BadgeModal";
 import { BadgeHandler, CategoryHandler } from "./utils/badge/data";
-import { patchGuildContext, patchUserContext } from "./components/context";
-import { DEFAULT_BADGE_CATEGORY, PluginLogger } from "./utils/constants";
-import { openModal } from "@utils/modal";
-import { BadgeModal } from "./components/modals/badge/CreateBadgeModal";
-
+import { addPatchContext_manageBadges, removePatchContext_manageBadges } from "./components/context";
+import { DEFAULT_BADGE_CATEGORY, DEFAULT_BADGE_CATEGORY_URL, PluginLogger } from "./utils/constants";
 
 
 export const cl = classNameFactory("pb-");
@@ -28,37 +27,23 @@ export default definePlugin({
     }],
     dependencies: ["BadgeAPI"],
     settings: pluginSettings,
-    
-    // patches: [
-    //     {
-    //         find: "toolbar:function",
-    //         replacement: {
-    //             match: /(function \i\(\i\){)(.{1,200}toolbar.{1,100}mobileToolbar)/,
-    //             replace: "$1$self.ApplyButtonToToolbar(arguments[0]);$2"
-    //         }
-    //     },
-    // ],
 
     toolboxActions: {
-        "Refresh Badges": async () => await BadgeHandler.re_init(),
-        "Open Modal": () => openModal(props => <BadgeModal props={props} />)
+        "Reinitialize Cache": async () => await BadgeHandler.re_init(),
+        "Open Badge Modal": () => openModal(props => <BadgeModal props={props} />)
     },
 
     async start()
     {
         await BadgeHandler.init();
-        await CategoryHandler.register({id: "", name: DEFAULT_BADGE_CATEGORY, badges: []});
+        await CategoryHandler.register({id: "", name: DEFAULT_BADGE_CATEGORY, icon: DEFAULT_BADGE_CATEGORY_URL, badges: []});
 
-
-        PluginLogger.log(BadgeHandler.getCache());
-
-        patchUserContext();
-        patchGuildContext();
+        addPatchContext_manageBadges();
     },
     stop()
     {
+        removePatchContext_manageBadges();
+        
         BadgeHandler.de_init();
-    },
-
-    // ApplyButtonToToolbar: ApplyButtonToToolbar
+    }
 });

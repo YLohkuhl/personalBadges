@@ -16,6 +16,15 @@
     gap: 13px;
 }
 
-.pb-fixed-select-width {
-    width: 22.2%;
+.pb-flex-menu-item {
+    align-items: center;
+    gap: 0.3em;
 }
+
+/* .pb-fixed-select-width {
+    width: 22.2%;
+} */
+
+/* .pb-quick-css-testing {
+    width: 47%;
+} */

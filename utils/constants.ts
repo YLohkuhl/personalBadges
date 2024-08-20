@@ -12,3 +12,4 @@ export const GITHUB_URL = "https://github.com/YLohkuhl/personalBadges";
 
 export const DEFAULT_BADGE_URL = "https://i.imgur.com/3CQhzM6.png";
 export const DEFAULT_BADGE_CATEGORY = "Unassigned";
+export const DEFAULT_BADGE_CATEGORY_URL = "https://i.imgur.com/8D4hCSK.png"

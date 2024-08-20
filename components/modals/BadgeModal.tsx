@@ -4,23 +4,23 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
 */
 
-import "../modal.css";
-import "../../../styles.css";
+import "./modal.css";
+import "../../styles.css";
 
 import { identity } from "@utils/misc";
 import { Link } from "@components/Link";
 import { Margins } from "@utils/margins";
-import { ModalContent, ModalFooter, ModalHeader, ModalProps, ModalRoot, ModalSize } from "@utils/modal";
-import { Alerts, Button, Forms, Select, showToast, Text, TextInput, Toasts, useEffect, useState } from "@webpack/common";
 import { SelectOption } from "@webpack/types";
+import { ModalContent, ModalFooter, ModalHeader, ModalProps, ModalRoot, ModalSize } from "@utils/modal";
+import { Alerts, Button, Flex, Forms, Select, showToast, Text, TextInput, Toasts, useState } from "@webpack/common";
 
-import { cl } from "../../..";
 
-import { BadgeHandler } from "../../../utils/badge/data";
-import { IPersonalBadge } from "../../../types";
-import { somethingWentWrong } from "../../../utils/misc";
-import { BadgeMenuItemLabel } from "../../context";
-import { DEFAULT_BADGE_CATEGORY, DEFAULT_BADGE_URL, GITHUB_URL, PluginLogger } from "../../../utils/constants";
+import { cl } from "../..";
+import { BadgeHandler } from "../../utils/badge/data";
+import { IPersonalBadge } from "../../types";
+import { openJSONFile, saveJSONFile, somethingWentWrong } from "../../utils/misc";
+import { BadgeMenuItemLabel, CategoryMenuItemLabel } from "../context";
+import { DEFAULT_BADGE_CATEGORY, DEFAULT_BADGE_URL, GITHUB_URL } from "../../utils/constants";
 
 
 export interface BadgeModalProps {
@@ -44,13 +44,18 @@ export function BadgeModal({ c_id, props }: BadgeModalProps) {
     const [position, setPosition] = useState<string>("Start");
     const [squircle, setSquircle] = useState<boolean>(false);
     const [global, setGlobal] = useState<boolean>(false);
-    
+
+    const [excluded, setExcluded] = useState<string[] | undefined>([]);
+    const [users, setUsers] = useState<string[] | undefined>([]);
+    const [guilds, setGuilds] = useState<string[] | undefined>([]);
+
+
     const categoryOptions: SelectOption[] = [];
 
     Array.from(BadgeHandler.getCache().entries()).map(x => {
         categoryOptions.push({
             label: x[1].name,
-            value: x[1].id,
+            value: x[1],
             disabled: !x[1].id,
             default: category === defaultCategory?.id
         })
@@ -65,7 +70,7 @@ export function BadgeModal({ c_id, props }: BadgeModalProps) {
     })
 
     Array.from(BadgeHandler.getCache().entries()).map(x => {
-        for (let badge of x[1].badges) {
+        for (let badge of x[1].badges ?? []) {
             badgeOptions.push({
                 label: badge.tooltip ?? "No Tooltip",
                 value: [x[1].id, badge],
@@ -73,6 +78,39 @@ export function BadgeModal({ c_id, props }: BadgeModalProps) {
             })
         }
     })
+    
+
+    function updateBadgeProperties() {
+        if (!badge) return;
+
+        badge.image = image;
+        badge.tooltip = tooltip;
+        badge.link = link;
+
+        badge.position = position;
+        badge.squircle = squircle;
+        badge.global = global;
+    }
+    
+    function setAll(c_id: string | undefined, b: IPersonalBadge | undefined, setBadgeUndefined: boolean = false) {
+        const formattedPosition = b?.position ? b.position.charAt(0).toUpperCase() + b.position.slice(1).toLowerCase() : undefined;
+    
+        setCategory(c_id ?? defaultCategory?.id);
+        setBadge(setBadgeUndefined ? undefined : b);
+    
+        setImage(b?.image ?? "");
+        setTooltip(b?.tooltip ?? "");
+        setLink(b?.link ?? "");
+        
+        setPosition(formattedPosition ?? "Start");
+        setSquircle(b?.squircle ?? false);
+        setGlobal(b?.global ?? false);
+
+        setExcluded(b?.excluded ?? []);
+        setUsers(b?.users ?? []);
+        setGuilds(b?.guilds ?? []);
+    }
+
     
     return <ModalRoot {...props} size={ModalSize.LARGE}>
         <ModalHeader className={cl('modal-header')}>
@@ -85,41 +123,69 @@ export function BadgeModal({ c_id, props }: BadgeModalProps) {
                 {badge ? "Edit" : "Create"} Badge
             </Text>
 
-            <Select popoutWidth={225}
-                placeholder="Select Category"
+            <Select popoutWidth={270}
                 options={categoryOptions}
-                select={(v) => setCategory(v)}
+                select={(v) => setCategory(v?.id)}
                 serialize={identity}
-                isSelected={(v) => category === v}
+                isSelected={(v) => category === v?.id}
+                renderOptionLabel={(o) => (
+                    o.value ? CategoryMenuItemLabel(o.value) : o.label
+                )}
+                renderOptionValue={(opts) => (
+                    opts.map(o => o.value ? CategoryMenuItemLabel(o.value) : o.label)
+                )}
             />
 
-            <Select className={cl('fixed-select-width')} popoutWidth={255}
-                placeholder="Select Badge"
+            <Select popoutWidth={270}
                 options={badgeOptions}
                 serialize={identity}
                 isSelected={(v) => badge === v?.[1]}
                 renderOptionLabel={(o) => (
                     o.value?.[1] ? BadgeMenuItemLabel(o.value?.[1]) : o.label
                 )}
+                renderOptionValue={(opts) => (
+                    opts.map(o => o.value?.[1] ? BadgeMenuItemLabel(o.value[1]) : o.label)
+                )}
                 select={(v: [string, IPersonalBadge]) => {
                     const category = v?.[0];
                     const badge = v?.[1];
-
-                    const formattedPosition = badge?.position ? badge.position.charAt(0).toUpperCase() + badge.position.slice(1).toLowerCase() : undefined;
-
-                    setCategory(category ?? defaultCategory?.id);
-                    setBadge(badge);
-
-                    setImage(badge?.image ?? "");
-                    setTooltip(badge?.tooltip ?? "");
-                    setLink(badge?.link ?? "");
-
-                    setPosition(formattedPosition ?? "Start");
-                    setSquircle(badge?.squircle ?? false);
-                    setGlobal(badge?.global ?? false);
+                    setAll(category, badge);
                 }}
             />
-            
+
+            <Flex style={{ flexDirection: "row-reverse" }} >
+
+                <Button 
+                    look={Button.Looks.LINK}
+                    color={Button.Colors.PRIMARY}
+                    onClick={async () => {
+                        openJSONFile(async (data: IPersonalBadge) => {
+                            if (Array.isArray(data))
+                                data = data[0]; // sorry only support adding one badge at a time, please manually modify the file to be in the format of a category instead
+                            setAll(undefined, data, true);
+                            showToast(`Successful! The data for this badge has been imported into the modal. (This includes users, guilds, etc.)`, Toasts.Type.SUCCESS);
+                        })
+                    }}
+                >
+                    Import
+                </Button>
+
+                {badge ? 
+                    <Button 
+                        disabled={!badge}
+                        look={Button.Looks.LINK}
+                        color={Button.Colors.PRIMARY}
+                        onClick={async () => {
+                            const { id: _, c_id: __, profileBadge: ___, ...includedData } = badge;
+                            saveJSONFile('p_badge.json', includedData)
+                        }}
+                    >
+                        Export
+                    </Button>
+                : (<></>)}
+
+            </Flex>
+
         </ModalHeader>
 
         <ModalContent>
@@ -219,7 +285,6 @@ export function BadgeModal({ c_id, props }: BadgeModalProps) {
         </ModalContent>
         
         <ModalFooter className={cl('modal-footer')}>
-
             <Button 
                 disabled={!category}
                 onClick={async () => {
@@ -235,7 +300,11 @@ export function BadgeModal({ c_id, props }: BadgeModalProps) {
 
                         position: position,
                         squircle: squircle,
-                        global: global
+                        global: global,
+
+                        excluded: excluded,
+                        users: users,
+                        guilds: guilds
                     };
 
                     if (!badge) {
@@ -244,15 +313,7 @@ export function BadgeModal({ c_id, props }: BadgeModalProps) {
                             props.onClose();
                         } else somethingWentWrong();
                     } else {
-
-                        badge.image = badge.image;
-                        badge.tooltip = badge.tooltip;
-                        badge.link = badge.link;
-
-                        badge.position = badge.position;
-                        badge.squircle = badge.squircle;
-                        badge.global = badge.global;
-
+                        updateBadgeProperties();
                         if (await BadgeHandler.update(category, badge)) {
                             showToast(`Successful! This badge has been updated.`, Toasts.Type.SUCCESS);
                             props.onClose();
@@ -271,24 +332,12 @@ export function BadgeModal({ c_id, props }: BadgeModalProps) {
                     onClick={async () => {
                         if (!category) return;
                         if (!badge) return;
-                        
-                        Alerts.show({
-                            title: "Are you sure?",
-                            body: (
-                                <>
-                                    Do know that once this badge is deleted, <b>it will be gone forever</b>.<br/><br/>
-                                    Please consider exporting your badge first as a backup file if this is not what you'd want.<br/><br/>
-                                    Would you still like to continue with this action? <b>There is no going back</b>.
-                                </>
-                            ),
-                            cancelText: "Nope...",
-                            confirmText: "Yep!",
-                            onConfirm: async () => {
-                                if (await BadgeHandler.deregister(category, badge.id)) {
-                                    showToast(`Successful! This badge has been deleted.`, Toasts.Type.SUCCESS);
-                                    props.onClose();
-                                } else somethingWentWrong();
-                            }
+
+                        deleteAlert(async () => {
+                            if (await BadgeHandler.deregister(category, badge.id)) {
+                                showToast(`Successful! This badge has been deleted.`, Toasts.Type.SUCCESS);
+                                props.onClose();
+                            } else somethingWentWrong();
                         })
                     }}
                 >
@@ -299,7 +348,24 @@ export function BadgeModal({ c_id, props }: BadgeModalProps) {
             <Button look={Button.Looks.OUTLINED} color={Button.Colors.PRIMARY} onClick={props.onClose}>
                 Cancel
             </Button>
-
+            
         </ModalFooter>
     </ModalRoot>
+}
+
+
+function deleteAlert(onConfirm: () => any) {
+    Alerts.show({
+        title: "Are you sure?",
+        body: (
+            <>
+                Do know that once this badge is deleted, <b>it will be gone forever</b>.<br/><br/>
+                Please consider exporting your badge first as a backup file if this is not what you'd want.<br/><br/>
+                Would you still like to continue with this action? <b>There is no going back</b>.
+            </>
+        ),
+        cancelText: "Nope...",
+        confirmText: "Yep!",
+        onConfirm: async () => await onConfirm()
+    })
 }

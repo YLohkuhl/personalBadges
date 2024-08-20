@@ -9,6 +9,7 @@ import { IPBadgeCategory, IPersonalBadge } from "../../../types";
 import { defineProfileBadge, iPersonalToProfile } from "..";
 
 import * as BadgeStore from '.';
+import * as api from '../../api';
 
 
 const cache = new Map<string, IPBadgeCategory>();
@@ -23,8 +24,8 @@ export const CategoryHandler = (new class {
             let category = cache.get(c_id);
             if (!category) return false;
 
-            for (let badge of category.badges)
-                await BadgeStore.BadgeHandler.deregister(c_id, badge.id);
+            for (let badge of category.badges ?? [])
+                await BadgeStore.BadgeHandler.deregister(c_id, badge.id)
 
             if (await BadgeStore.deregisterCategory(c_id))
                 cache.delete(c_id);
@@ -41,14 +42,10 @@ export const CategoryHandler = (new class {
 
     public async update(value: IPBadgeCategory): Promise<boolean> {
         try {
-            if (!value.name) return false;
-
-            let category = cache.get(value.id);
-            if (!category) return false;
+            if (!cache.get(value.id)) return false;
 
             if (await BadgeStore.updateCategory(value)) {
-                category.name = value.name;
-                cache.set(category.id, category);
+                cache.set(value.id, value);
             } else return false;
 
             PluginLogger.info(`(${value.id}) \"${value.name}\" category successfully updated.`);
@@ -63,18 +60,24 @@ export const CategoryHandler = (new class {
     public async register(value: IPBadgeCategory): Promise<boolean> {
         try {
             if (Array.from(cache.entries()).some((data: [string, IPBadgeCategory]) => {
-                PluginLogger.log(data[1], value);
+                // PluginLogger.log(data[1], value);
 
                 if (data[1].name === value.name) return true;
-                if (data[1].badges.length > 0 && value.badges.length > 0)
-                    return JSON.stringify(data[1].badges) === JSON.stringify(value.badges);
+                if (data[1].badges && value.badges)
+                    if (data[1].badges.length > 0 && value.badges.length > 0)
+                        return JSON.stringify(data[1].badges) === JSON.stringify(value.badges);
             })) return false;
 
-            if (!value.name) return false;
-
-            if (await BadgeStore.registerCategory(value))
+            if (await BadgeStore.registerCategory(value)) {
+                for (let badge of value.badges ?? [])
+                    badge.profileBadge = iPersonalToProfile(badge);
                 cache.set(value.id, value);
-            else return false;
+            } else return false;
+
+            for (let badge of value.badges ?? []) {
+                if (!api.addBadge(value.id, badge.id)) continue;
+                PluginLogger.info(`(${value.id}) \"${badge.tooltip}\" (${badge.id}) badge successfully registered.`);
+            }
 
             PluginLogger.info(`(${value.id}) \"${value.name}\" category successfully registered.`);
             return true;
@@ -84,7 +87,6 @@ export const CategoryHandler = (new class {
             return false;
         }
     }
-
 })
 
 export default (new class BadgeHandler {
@@ -98,7 +100,7 @@ export default (new class BadgeHandler {
             const registered = await BadgeStore.registered();
             
             Object.entries(registered).map((data) => {
-                for (let v of data[1].badges) {
+                for (let v of data[1].badges ?? []) {
                     v.profileBadge = iPersonalToProfile(v);
                     count++;
                 }
@@ -122,7 +124,7 @@ export default (new class BadgeHandler {
 
         try {
             cache.forEach((data) => {
-                for (let badge of data.badges) {
+                for (let badge of data.badges ?? []) {
                     Vencord.Api.Badges.removeBadge(defineProfileBadge(badge.profileBadge));
                     count++;
                 }
@@ -142,7 +144,7 @@ export default (new class BadgeHandler {
         try {
             await this.refreshCache();
             cache.forEach((data) => {
-                for (let badge of data.badges) {
+                for (let badge of data.badges ?? []) {
                     Vencord.Api.Badges.addBadge(defineProfileBadge(badge.profileBadge));
                     count++;
                 }
@@ -155,17 +157,16 @@ export default (new class BadgeHandler {
         }
     }
 
-    public async deregister(c_id: string, b_id: string, useApi: boolean = true): Promise<boolean> {
+    public async deregister(c_id: string, b_id: string): Promise<boolean> {
         try {
             let category = cache.get(c_id);
             if (!category) return false;
             
-            let badge = category.badges.find(x => x.id === b_id);
+            let badge = api.removeBadge(category.id, b_id);
             if (!badge) return false;
-            if (useApi) Vencord.Api.Badges.removeBadge(defineProfileBadge(badge.profileBadge));
 
             if (await BadgeStore.deregisterBadge(c_id, b_id)) {
-                category.badges.splice(category.badges.indexOf(badge), 1);
+                category.badges?.splice(category.badges?.indexOf(badge), 1);
                 cache.set(c_id, category);
             } else return false;
 
@@ -178,7 +179,7 @@ export default (new class BadgeHandler {
         }
     }
 
-    public async update(c_id: string, value: IPersonalBadge, useApi: boolean = true): Promise<boolean> {
+    public async update(c_id: string, value: IPersonalBadge): Promise<boolean> {
         try {
             const category = cache.get(c_id);
             if (!category) return false;
@@ -186,24 +187,22 @@ export default (new class BadgeHandler {
             let old = cache.get(value.c_id)
             if (!old) return false;
 
-            let badge = c_id !== value.id ? old.badges.find(x => x.id === value.id) : category.badges.find(x => x.id === value.id);
+            let badge = api.removeBadge(c_id !== value.c_id ? old.id : category.id, value.id);
             if (!badge) return false;
-            if (useApi) Vencord.Api.Badges.removeBadge(defineProfileBadge(badge.profileBadge));
 
             if (c_id !== value.c_id) {
-                old.badges.splice(old.badges.indexOf(badge), 1);
+                old.badges?.splice(old.badges?.indexOf(badge), 1);
                 cache.set(value.c_id, old);
-            } else category.badges.splice(category.badges.indexOf(badge), 1);
+            } else category.badges?.splice(category.badges?.indexOf(badge), 1);
 
             if (await BadgeStore.updateBadge(c_id, value)) {
                 value.profileBadge = iPersonalToProfile(value);
-                category.badges.push(value);
+                category.badges?.push(value);
                 cache.set(c_id, category);
             } else return false;
 
-            badge = category.badges.find(x => x.id === value.id);
+            badge = api.addBadge(category.id, value.id);
             if (!badge) return false;
-            if (useApi) Vencord.Api.Badges.addBadge(defineProfileBadge(badge.profileBadge));
 
             PluginLogger.info(`(${c_id}) \"${badge.tooltip}\" (${badge.id}) badge successfully updated.`);
             return true;
@@ -214,10 +213,10 @@ export default (new class BadgeHandler {
         }
     }
 
-    public async register(c_id: string, value: IPersonalBadge, useApi: boolean = true): Promise<boolean> {
+    public async register(c_id: string, value: IPersonalBadge): Promise<boolean> {
         try {
             if (Array.from(cache.entries()).some((data: [string, IPBadgeCategory]) => {
-                return data[1].badges.some(x => {
+                return data[1].badges?.some(x => {
                     let {id: _, c_id: __, profileBadge: ___, ...cached} = x;
                     let {id: ____, c_id: _____, profileBadge: ______, ...object} = value;
                     PluginLogger.log(cached, object);
@@ -230,13 +229,12 @@ export default (new class BadgeHandler {
 
             if (await BadgeStore.registerBadge(c_id, value)) {
                 value.profileBadge = iPersonalToProfile(value);
-                category.badges.push(value);
+                category.badges?.push(value);
                 cache.set(c_id, category);
             } else return false;
 
-            let badge = category.badges.find(x => x.id === value.id);
+            let badge = api.addBadge(category.id, value.id);
             if (!badge) return false;
-            if (useApi) Vencord.Api.Badges.addBadge(defineProfileBadge(badge.profileBadge));
 
             PluginLogger.info(`(${c_id}) \"${badge.tooltip}\" (${badge.id}) badge successfully registered.`);
             return true;

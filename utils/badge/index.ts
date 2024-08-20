@@ -19,15 +19,15 @@ export function defineProfileBadge(profileBadge: ProfileBadge | undefined): Prof
 }
 
 export function defineLink(link: string | undefined): string {
-    return !link || link === "" ? GITHUB_URL : link;
+    return !link || link.trim() === "" ? GITHUB_URL : link;
 }
 
 export function defineImage(image: string | undefined): string {
-    return !image || image === "" ? DEFAULT_BADGE_URL : image;
+    return !image || image.trim() === "" ? DEFAULT_BADGE_URL : image;
 }
 
 export function defineTooltip(tooltip: string | undefined): string | undefined {
-    return !tooltip || tooltip === "" ? undefined : tooltip;
+    return !tooltip || tooltip.trim() === "" ? undefined : tooltip;
 }
 
 export function definePosition(position: string | undefined): BadgePosition {

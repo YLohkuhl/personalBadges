@@ -8,7 +8,6 @@ import { Guild, User } from "discord-types/general";
 
 import { PluginLogger } from "../../utils/constants";
 import { BadgeHandler } from "./data";
-import { IPBadgeCategory } from "userplugins/personalBadges/types";
 
 
 export async function excludeBadge(user: User, c_id: string, b_id: string): Promise<boolean> {
@@ -16,7 +15,7 @@ export async function excludeBadge(user: User, c_id: string, b_id: string): Prom
         const category = BadgeHandler.getCache().get(c_id);
         if (!category) return false;
 
-        const badge = category.badges.find(x => x.id === b_id);
+        const badge = category.badges?.find(x => x.id === b_id);
         if (!badge) return false;
 
         let wasIncluded: boolean = badge.users?.includes(user.id) ? badge.users.splice(badge.users.indexOf(user.id), 1).length > 0 : false;
@@ -38,7 +37,7 @@ export async function includeBadge(user: User, c_id: string, b_id: string): Prom
         const category = BadgeHandler.getCache().get(c_id);
         if (!category) return false;
 
-        const badge = category.badges.find(x => x.id === b_id);
+        const badge = category.badges?.find(x => x.id === b_id);
         if (!badge) return false;
 
         let wasExcluded: boolean = badge.excluded?.includes(user.id) ? badge.excluded.splice(badge.excluded.indexOf(user.id), 1).length > 0 : false;
@@ -69,7 +68,7 @@ export async function excludeGuildBadge(guild: Guild, c_id: string, b_id: string
         const category = BadgeHandler.getCache().get(c_id);
         if (!category) return false;
 
-        const badge = category.badges.find(x => x.id === b_id);
+        const badge = category.badges?.find(x => x.id === b_id);
         if (!badge) return false;
 
         if (!badge.guilds) badge.guilds = [guild.id];
@@ -89,7 +88,7 @@ export async function includeGuildBadge(guild: Guild, c_id: string, b_id: string
         const category = BadgeHandler.getCache().get(c_id);
         if (!category) return false;
 
-        const badge = category.badges.find(x => x.id === b_id);
+        const badge = category.badges?.find(x => x.id === b_id);
         if (!badge) return false;
 
         if (!badge.guilds) badge.guilds = [guild.id];

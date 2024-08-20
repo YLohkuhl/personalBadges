@@ -4,10 +4,11 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
 */
 
-import { Alerts } from "@webpack/common";
+import { Alerts, showToast, Toasts } from "@webpack/common";
 import { Link } from "@components/Link";
 
-import { GITHUB_URL } from "./constants";
+import { GITHUB_URL, PluginLogger } from "./constants";
+import { IPersonalBadge } from "../types";
 
 
 export function quickAlert(title: any, body: React.ReactNode) {
@@ -22,4 +23,79 @@ export function somethingWentWrong() {
             Report an issue at the <b><Link href={GITHUB_URL}>GitHub</Link></b> of your results to debug the issue.
         </>
     ));
+}
+
+// uhh thanks holy notes
+
+export async function saveJSONFile(filename: string, data: any) {
+    const jsonData = JSON.stringify(data ?? {}, null, 2);
+
+    if (IS_WEB) {
+        const file = new File([jsonData], filename, { type: "application/json" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(file);
+        a.download = filename;
+
+        document.body.appendChild(a);
+        a.click();
+        setImmediate(() => {
+            URL.revokeObjectURL(a.href);
+            document.body.removeChild(a);
+        });
+    } else DiscordNative.fileManager.saveWithDialog(jsonData, filename);
+}
+
+export async function openJSONFile(onLoad: (data: any) => any): Promise<any> {
+    if (IS_WEB) {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "application/json";
+
+        input.onchange = async () => {
+            const file = input.files?.[0];
+            if (!file) return undefined;
+
+            const reader = new FileReader();
+            reader.readAsText(file);
+
+            reader.onload = async () => {
+                try {
+                    let data: any;
+
+                    data = JSON.parse(reader.result as unknown as string);
+                    if (!data) return undefined;
+
+                    await onLoad(data);
+                } catch (error) {
+                    showToast(`Failed. May contain an invalid json format.`, Toasts.Type.FAILURE);
+                    PluginLogger.error(error);
+                }
+            };
+        }
+
+        document.body.appendChild(input);
+        input.click();
+        setImmediate(() => document.body.removeChild(input));
+    } else {
+        const [file] = await DiscordNative.fileManager.openFiles({
+            filters: [{
+                name: "Exported",
+                extensions: ["json"]
+            }]
+        });
+
+        if (file) {
+            try {
+                let data: any;
+
+                data = JSON.parse(new TextDecoder().decode(file.data));
+                if (!data) return undefined;
+
+                await onLoad(data);
+            } catch (error) {
+                showToast(`Failed. May contain an invalid json format.`, Toasts.Type.FAILURE);
+                PluginLogger.error(error);
+            }
+        }
+    }
 }

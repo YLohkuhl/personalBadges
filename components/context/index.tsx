@@ -4,21 +4,23 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
 */
 
-import { Flex, Menu} from "@webpack/common";
-import { openModal } from "@utils/modal";
+import "../../styles.css";
 
-import { IPersonalBadge } from "../../types";
+import { openModal } from "@utils/modal";
+import { Flex, Menu, showToast, Toasts } from "@webpack/common";
+
+import { cl } from "../..";
 import { CategoryModal } from "../modals/CategoryModal";
+import { IPBadgeCategory, IPersonalBadge } from "../../types";
+import { DEFAULT_BADGE_CATEGORY_URL } from "../../utils/constants";
+import { openJSONFile, somethingWentWrong } from "../../utils/misc";
 
 import * as bUtil from "../../utils/badge";
-
-
-export * from './UserContext';
-export * from './GuildContext';
+import { CategoryHandler } from "userplugins/personalBadges/utils/badge/data";
 
 
 export const BadgeMenuItemLabel = (badge: IPersonalBadge) => (
-    <Flex style={{ alignItems: "center", gap: "0.5em" }}>
+    <Flex className={cl('flex-menu-item')}>
         <img 
             style={bUtil.defineStyleProps(badge.squircle)} 
             src={bUtil.defineImage(badge.image)} 
@@ -30,42 +32,57 @@ export const BadgeMenuItemLabel = (badge: IPersonalBadge) => (
 );
 
 
-export const CategoryElement = (id: string, c_id: string | undefined) => (
-    <>
-        <Menu.MenuItem
-            id={id}
-            key={id}
-            label={`${c_id ? "Edit" : "Create"} Category`}
-            color="brand"
-            action={() => openModal(props => <CategoryModal c_id={c_id} props={props} />)}
+export const CategoryMenuItemLabel = (category: IPBadgeCategory) => (
+    <Flex className={cl('flex-menu-item')}>
+        <img
+            style={bUtil.defineStyleProps(true)}
+            src={!category.icon || category.icon.trim() === "" ? DEFAULT_BADGE_CATEGORY_URL : category.icon}
+            height={27}
+            width={27}
         />
-    </>
+        {category.name}
+    </Flex>
+)
+
+
+export const CategoryElement = (id: string, c_id: string | undefined) => (
+    <Menu.MenuItem
+        id={id}
+        key={id}
+        label={`${c_id ? "Edit" : "Create"} Category`}
+        color="brand"
+        action={() => openModal(props => <CategoryModal c_id={c_id} props={props} />)}
+    />
 );
 
 
-// export const DeleteCategoryElement = (id: string, c_id: string) => (
-//     <>
-//         <Menu.MenuItem
-//             id={id}
-//             key={id}
-//             label="Delete Category"
-//             action={() => Alerts.show({
-//                 title: "Are you sure?",
-//                 body: (
-//                     <>
-//                         Do know that when deleting any category, <b>all of the badges</b> listed under it <b>will be deleted</b>.<br/><br/>
-//                         Please consider moving them before deleting this category if that is not what you'd intend to happen.<br/><br/>
-//                         Would you still like to continue with this action? <b>There is no going back</b>.
-//                     </>
-//                 ),
-//                 cancelText: "Nope...",
-//                 confirmText: "Yep!",
-//                 onConfirm: async () => {
-//                     if (await CategoryHandler.deregister(c_id))
-//                         showToast("Successful! This category has been deleted & the badges contained within it.", Toasts.Type.SUCCESS);
-//                     else somethingWentWrong();
-//                 }
-//             })}
-//         />
-//     </>
-// );
+export const ImportCategoryElement = (id: string) => (
+    <Menu.MenuItem
+        id={id}
+        key={id}
+        label="Import Category"
+        color="brand"
+        action={async () => {
+            openJSONFile(async (data: IPBadgeCategory) => {
+                if (Array.isArray(data))
+                    data = data[0]; // well just in case
+
+                if (!data.name) return;
+
+                const object = {
+                    id: "",
+                    icon: data.icon,
+                    name: data.name,
+                    badges: data.badges
+                }
+
+                if (await CategoryHandler.register(object)) {
+                    showToast(`Successful! The data for this category has been imported and created. (This includes badges.)`, Toasts.Type.SUCCESS);
+                } else somethingWentWrong();
+            })
+        }}
+    />
+)
+
+
+export * from './ManageBadges';

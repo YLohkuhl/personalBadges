@@ -13,13 +13,14 @@ export interface IPersonalBadge {
 
     image?: string,
     tooltip?: string,
-    position?: string,
     link?: string,
-    squircle: boolean,
     
+    position?: string,
+    squircle: boolean,
     global: boolean,
-    users?: string[],
+
     excluded?: string[],
+    users?: string[],
     guilds?: string[]
     
     profileBadge?: ProfileBadge
@@ -28,7 +29,8 @@ export interface IPersonalBadge {
 
 export interface IPBadgeCategory {
     id: string,
+    icon?: string,
     name: string,
 
-    badges: IPersonalBadge[]
+    badges?: IPersonalBadge[]
 }
