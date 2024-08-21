@@ -20,18 +20,14 @@ let dev: ProfileBadge;
 
 // why not? who says I can't have a global badge for making the plugin lol
 function fetchDevBadge() {
-    if (!dev) {
-        fetch(DEVELOPER_BADGE_URL).then(async function(response) {
-            const json: IPersonalBadge = await response?.json();
-            if (!json) return;
+    fetch(DEVELOPER_BADGE_URL).then(async function(response) {
+        const json: IPersonalBadge = await response?.json();
+        if (!json) return;
 
-            dev = iPersonalToProfile(json);
-            Vencord.Api.Badges.addBadge(dev);
-        })
-    } else {
-        Vencord.Api.Badges.removeBadge(dev);
+        if (dev) Vencord.Api.Badges.removeBadge(dev);
+        else dev = iPersonalToProfile(json);
         Vencord.Api.Badges.addBadge(dev);
-    }
+    })
 }
 
 
