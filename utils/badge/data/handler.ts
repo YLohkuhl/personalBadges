@@ -4,15 +4,35 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
 */
 
-import { PluginLogger } from "../../../utils/constants";
-import { IPBadgeCategory, IPersonalBadge } from "../../../types";
+import { ProfileBadge } from "@api/Badges";
 import { defineProfileBadge, iPersonalToProfile } from "..";
+import { IPBadgeCategory, IPersonalBadge } from "../../../types";
+import { DEVELOPER_BADGE_URL, PluginLogger } from "../../../utils/constants";
 
 import * as BadgeStore from '.';
 import * as api from '../../api';
 
 
 const cache = new Map<string, IPBadgeCategory>();
+
+
+let dev: ProfileBadge;
+
+// why not? who says I can't have a global badge for making the plugin lol
+function fetchDevBadge() {
+    if (!dev) {
+        fetch(DEVELOPER_BADGE_URL).then(async function(response) {
+            const json: IPersonalBadge = await response?.json();
+            if (!json) return;
+
+            dev = iPersonalToProfile(json);
+            Vencord.Api.Badges.addBadge(dev);
+        })
+    } else {
+        Vencord.Api.Badges.removeBadge(dev);
+        Vencord.Api.Badges.addBadge(dev);
+    }
+}
 
 
 export const CategoryHandler = (new class {
@@ -140,7 +160,7 @@ export default (new class BadgeHandler {
 
     public async init() {
         let count: number = 0;
-        
+
         try {
             await this.refreshCache();
             cache.forEach((data) => {
@@ -150,6 +170,7 @@ export default (new class BadgeHandler {
                 }
             });
 
+            fetchDevBadge();
             PluginLogger.info(`(${count}) Badge(s) successfully registered.`);
         } catch (error) {
             PluginLogger.warn(`Could not successfully register badge(s). (${count})`);
@@ -219,7 +240,7 @@ export default (new class BadgeHandler {
                 return data[1].badges?.some(x => {
                     let {id: _, c_id: __, profileBadge: ___, ...cached} = x;
                     let {id: ____, c_id: _____, profileBadge: ______, ...object} = value;
-                    PluginLogger.log(cached, object);
+                    // PluginLogger.log(cached, object);
                     return JSON.stringify(cached) === JSON.stringify(object);
                 });
             })) return false;

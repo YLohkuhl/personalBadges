@@ -29,6 +29,7 @@ export interface IPersonalBadge {
 
 export interface IPBadgeCategory {
     id: string,
+    
     icon?: string,
     name: string,
 

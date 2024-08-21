@@ -142,7 +142,7 @@ const baseContextMenuElements_manageBadges = (props: { ctx_id: string, grp_label
                     return (
                         <>
                             {category.badges?.map((value, bIndex) => {
-                                const id = `${ctx_id}-eb-unassigned-badge-${bIndex}`
+                                const id = `${ctx_id}-eb-badge-${bIndex}`
                                 const badge = value;
 
                                 return (

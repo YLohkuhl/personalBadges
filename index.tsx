@@ -12,7 +12,7 @@ import { pluginSettings } from "./utils/settings";
 import { BadgeModal } from "./components/modals/BadgeModal";
 import { BadgeHandler, CategoryHandler } from "./utils/badge/data";
 import { addPatchContext_manageBadges, removePatchContext_manageBadges } from "./components/context";
-import { DEFAULT_BADGE_CATEGORY, DEFAULT_BADGE_CATEGORY_URL, PluginLogger } from "./utils/constants";
+import { DEFAULT_BADGE_CATEGORY, DEFAULT_BADGE_CATEGORY_URL } from "./utils/constants";
 
 
 export const cl = classNameFactory("pb-");
@@ -30,7 +30,7 @@ export default definePlugin({
 
     toolboxActions: {
         "Reinitialize Cache": async () => await BadgeHandler.re_init(),
-        "Open Badge Modal": () => openModal(props => <BadgeModal props={props} />)
+        "Open Badge Modal": () => openModal(props => <BadgeModal { ...props } />)
     },
 
     async start()
@@ -43,7 +43,7 @@ export default definePlugin({
     stop()
     {
         removePatchContext_manageBadges();
-        
+
         BadgeHandler.de_init();
     }
 });

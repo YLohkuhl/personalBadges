@@ -14,8 +14,8 @@ import { SelectOption } from "@webpack/types";
 import { ModalContent, ModalFooter, ModalHeader, ModalProps, ModalRoot, ModalSize } from "@utils/modal";
 import { Alerts, Button, Flex, Forms, Select, showToast, Text, TextInput, Toasts, useState } from "@webpack/common";
 
-
 import { cl } from "../..";
+
 import { BadgeHandler } from "../../utils/badge/data";
 import { IPersonalBadge } from "../../types";
 import { openJSONFile, saveJSONFile, somethingWentWrong } from "../../utils/misc";
@@ -23,17 +23,10 @@ import { BadgeMenuItemLabel, CategoryMenuItemLabel } from "../context";
 import { DEFAULT_BADGE_CATEGORY, DEFAULT_BADGE_URL, GITHUB_URL } from "../../utils/constants";
 
 
-export interface BadgeModalProps {
-    c_id?: string,
-    props: ModalProps,
-}
-
-
-export function BadgeModal({ c_id, props }: BadgeModalProps) {
+export function BadgeModal(props: ModalProps) {
     const defaultCategory = Array.from(BadgeHandler.getCache().entries()).find(x => x[1].name === DEFAULT_BADGE_CATEGORY)?.[1];
-    
-    c_id = BadgeHandler.getCache().get(c_id ?? "")?.id;
-    const [category, setCategory] = useState<string | undefined>(c_id ?? defaultCategory?.id);
+
+    const [category, setCategory] = useState<string | undefined>(defaultCategory?.id);
 
     const [badge, setBadge] = useState<IPersonalBadge>()
     
@@ -153,13 +146,13 @@ export function BadgeModal({ c_id, props }: BadgeModalProps) {
                 }}
             />
 
-            <Flex style={{ flexDirection: "row-reverse" }} >
+            <Flex style={{ flexDirection: "row-reverse" }}>
 
                 <Button 
                     look={Button.Looks.LINK}
                     color={Button.Colors.PRIMARY}
                     onClick={async () => {
-                        openJSONFile(async (data: IPersonalBadge) => {
+                        await openJSONFile(async (data: IPersonalBadge) => {
                             if (Array.isArray(data))
                                 data = data[0]; // sorry only support adding one badge at a time, please manually modify the file to be in the format of a category instead
                             setAll(undefined, data, true);

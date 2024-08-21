@@ -63,11 +63,12 @@ export const ImportCategoryElement = (id: string) => (
         label="Import Category"
         color="brand"
         action={async () => {
-            openJSONFile(async (data: IPBadgeCategory) => {
+            await openJSONFile(async (data: IPBadgeCategory) => {
                 if (Array.isArray(data))
                     data = data[0]; // well just in case
 
                 if (!data.name) return;
+                if (data.name.length > 20) data.name = data.name.substring(0, 20);
 
                 const object = {
                     id: "",

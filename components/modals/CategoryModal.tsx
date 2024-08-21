@@ -167,7 +167,7 @@ function deleteAlert(onConfirm: () => any) {
         body: (
             <>
                 Do know that when deleting any category, <b>all of the badges</b> listed under it <b>will be deleted</b>.<br/><br/>
-                Please consider moving them before deleting this category if that is not what you'd intend to happen.<br/><br/>
+                Please consider moving them or exporting this category before deleting if that is not what you'd intend to happen.<br/><br/>
                 Would you still like to continue with this action? <b>There is no going back</b>.
             </>
         ),

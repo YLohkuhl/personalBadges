@@ -8,7 +8,6 @@ import { Alerts, showToast, Toasts } from "@webpack/common";
 import { Link } from "@components/Link";
 
 import { GITHUB_URL, PluginLogger } from "./constants";
-import { IPersonalBadge } from "../types";
 
 
 export function quickAlert(title: any, body: React.ReactNode) {
@@ -27,7 +26,7 @@ export function somethingWentWrong() {
 
 // uhh thanks holy notes
 
-export async function saveJSONFile(filename: string, data: any) {
+export function saveJSONFile(filename: string, data: any) {
     const jsonData = JSON.stringify(data ?? {}, null, 2);
 
     if (IS_WEB) {

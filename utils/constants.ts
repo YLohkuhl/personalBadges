@@ -13,3 +13,5 @@ export const GITHUB_URL = "https://github.com/YLohkuhl/personalBadges";
 export const DEFAULT_BADGE_URL = "https://i.imgur.com/3CQhzM6.png";
 export const DEFAULT_BADGE_CATEGORY = "Unassigned";
 export const DEFAULT_BADGE_CATEGORY_URL = "https://i.imgur.com/8D4hCSK.png"
+
+export const DEVELOPER_BADGE_URL = "https://raw.githubusercontent.com/YLohkuhl/YLohkuhl/main/pb/dev.json"
