@@ -4,32 +4,59 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
 */
 
-import { definePluginSettings } from "@api/Settings";
-import { OptionType } from "@utils/types";
-import { showItemInFolder } from "@utils/native";
-import { Button, Forms } from "@webpack/common";
+import '../styles.css';
 
-import { Native, re_registerBadges } from "..";
+import { Margins } from '@utils/margins';
+import { openModal } from '@utils/modal';
+import { OptionType } from "@utils/types";
+import { Button, Forms } from "@webpack/common";
+import { definePluginSettings } from "@api/Settings";
+
+import { cl } from '..';
+import { GITHUB_URL } from './constants';
+import { BadgeHandler } from './badge/data';
+import { BadgeModal } from '../components/modals/BadgeModal';
 
 
 export const pluginSettings = definePluginSettings({
     pluginButtons: {
         type: OptionType.COMPONENT,
-        description: "PersonalBadges Buttons",
+        description: "Plugin Buttons",
         component: () => {
             return (
                 <Forms.FormSection>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <Button style={{ marginRight: "10px" }} onClick={async () => showItemInFolder(await Native.getBadgeDataDir())}>
-                            Locate Badges Folder
+                    <Forms.FormText className={Margins.bottom16} type={Forms.FormText.Types.DESCRIPTION}>
+                        99% of the time you won't <i>need</i> to use this. All changes should be automatically applied without reinitializing the cache. 
+                        It is most useful with problems that could utilize it!
+                    </Forms.FormText>
+
+                    <div className={cl('button-grid')}>
+                        <Button 
+                            look={Button.Looks.OUTLINED}
+                            color={Button.Colors.PRIMARY}
+                            onClick={async () => await BadgeHandler.re_init()}
+                        >
+                            Reinitialize Cache
                         </Button>
-                        <Button style={{ marginRight: "10px" }} color={Button.Colors.PRIMARY} onClick={async () => VencordNative.native.openExternal("https://github.com/YLohkuhl/personalBadges?tab=readme-ov-file#usage")}>
-                            How to Use
+
+                        <Button 
+                            onClick={() => openModal(props => <BadgeModal { ...props } />)}
+                        >
+                            Open Badge Modal
                         </Button>
-                        <Button color={Button.Colors.GREEN} onClick={async () => await re_registerBadges()}>
-                            Update Badges
+
+                        <Button 
+                            look={Button.Looks.OUTLINED}
+                            color={Button.Colors.PRIMARY} 
+                            onClick={async () => await VencordNative.native.openExternal(GITHUB_URL)}
+                        >
+                            GitHub
                         </Button>
                     </div>
+
+                    <Forms.FormText className={Margins.top16} type={Forms.FormText.Types.DESCRIPTION}>
+                        You can also enable the <code>VencordToolbox</code> plugin to have much quicker access to the badge modal!
+                    </Forms.FormText>
                 </Forms.FormSection>
             )
         }

@@ -4,12 +4,34 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
 */
 
+import { ProfileBadge } from "@api/Badges"
+
+
 export interface IPersonalBadge {
+    id: string,
+    c_id: string,
+
     image?: string,
     tooltip?: string,
-    position?: string,
     link?: string,
-    users: string[],
+    
+    position?: string,
+    squircle: boolean,
     global: boolean,
-    excluded?: string[]
+
+    excluded?: string[],
+    users?: string[],
+    guilds?: string[]
+    
+    profileBadge?: ProfileBadge
+    // path?: string
+}
+
+export interface IPBadgeCategory {
+    id: string,
+    
+    icon?: string,
+    name: string,
+
+    badges?: IPersonalBadge[]
 }
