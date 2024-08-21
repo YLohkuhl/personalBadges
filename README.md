@@ -22,12 +22,13 @@
 <div align=center>
     <h3>Seems interesting? Want to install this plugin?</h3>
     <li>
-        <a href="https://docs.vencord.dev/installing/custom-plugins/"><b>Installing Custom Vencord Plugins</b></a>
+        <a href="https://docs.vencord.dev/installing/custom-plugins/"><b>Vencord: Installing Custom Plugins</b></a>
     </li>
 </div>
 
 <div align=center>
+    <br>
     <a href="docs/BASIC_INSTRUCTIONS.md">
-        <h3>Refer to here for a set of basic instructions on the plugin.</h3>
+        <b>Refer to here for a set of basic instructions on the plugin.</b>
     </a>
 </div>
