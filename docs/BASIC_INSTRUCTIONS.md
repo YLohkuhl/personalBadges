@@ -81,7 +81,7 @@ In case you're not sure what that is, you can skip this. **It's only** if you wa
 <sub>A good case for this would be if you have multiple badges in one file within an array. Convert this to a category! Can only import one badge at a time.</sub>
 
 #### Badge Interface Properties
-- [`IPersonalBadge`]()
+- [`IPersonalBadge`](../docs/types/IPersonalBadge.md)
 
 #### Category Interface Properties
-- [`IPBadgeCategory`]()
+- [`IPBadgeCategory`](../docs/types/IPBadgeCategory.md)
