@@ -60,9 +60,20 @@ export async function deregisterCategory(c_id: string): Promise<boolean> {
 
 export async function updateCategory(value: IPBadgeCategory): Promise<boolean> {
     try {
-        if (!await DataStore.get(value.id, BadgeStore)) return false;
+        const category = await DataStore.get(value.id, BadgeStore);
+        if (!category) return false;
+        
+        const badges: IPersonalBadge[] = [];
+        for (let badge of value.badges ?? []) {
+            let { profileBadge: _, ...object } = badge;
+            badges.push(object);
+        }
 
-        await DataStore.set(value.id, value, BadgeStore)
+        category.name = value.name;
+        category.icon = value.icon;
+        category.badges = badges;
+        
+        await DataStore.set(value.id, category, BadgeStore)
         return true;
     } catch (error) {
         PluginLogger.error(error);
