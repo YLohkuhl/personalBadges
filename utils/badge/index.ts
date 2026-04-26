@@ -15,7 +15,7 @@ export function isExcluded(userId: string, badge: IPersonalBadge): boolean {
 }
 
 export function defineProfileBadge(profileBadge: ProfileBadge | undefined): ProfileBadge {
-    return profileBadge ?? {};
+    return profileBadge ?? { "id": "" };
 }
 
 export function defineLink(link: string | undefined): string {
@@ -49,6 +49,7 @@ export function defineStyleProps(squircle: boolean) {
 
 export function iPersonalToProfile(i: IPersonalBadge): ProfileBadge {
     return {
+        id: "",
         iconSrc: defineImage(i.image),
         description: defineTooltip(i.tooltip),
         position: definePosition(i.position),

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { Guild, User } from "discord-types/general";
-
+import { Guild, User } from "@vencord/discord-types";
 import { PluginLogger } from "../../utils/constants";
 import { BadgeHandler } from "./data";
 

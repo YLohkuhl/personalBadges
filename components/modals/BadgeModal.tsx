@@ -159,7 +159,7 @@ export function BadgeModal(props: ModalProps) {
                             if (Array.isArray(data))
                                 data = data[0]; // sorry only support adding one badge at a time, please manually modify the file to be in the format of a category instead
                             setAll(undefined, data, true);
-                            showToast(`Badge "${tooltip}" data has been imported into the modal. (This includes users, guilds, etc.)`, Toasts.Type.SUCCESS);
+                            showToast(`Badge "${data.tooltip}" data has been imported into the modal. (This includes users, guilds, etc.)`, Toasts.Type.SUCCESS);
                         });
                     }}
                 >
