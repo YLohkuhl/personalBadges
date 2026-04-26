@@ -25,6 +25,7 @@ export default definePlugin({
         name: "YLohkuhl",
         id: 1204700402235478078n
     }],
+    tags: ["Customisation", "Fun"],
     dependencies: ["BadgeAPI"],
     settings: pluginSettings,
 

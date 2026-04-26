@@ -9,7 +9,6 @@ import "../../styles.css";
 import { Flex } from "@components/Flex";
 import { openModal } from "@utils/modal";
 import { Menu, showToast, Toasts } from "@webpack/common";
-import { CategoryHandler } from "userplugins/personalBadges/utils/badge/data";
 
 import { cl } from "../..";
 import { IPBadgeCategory, IPersonalBadge } from "../../types";
@@ -17,6 +16,7 @@ import * as bUtil from "../../utils/badge";
 import { DEFAULT_BADGE_CATEGORY_URL } from "../../utils/constants";
 import { openJSONFile, somethingWentWrong } from "../../utils/misc";
 import { CategoryModal } from "../modals/CategoryModal";
+import { CategoryHandler } from "../../utils/badge/data";
 
 
 export const BadgeMenuItemLabel = (badge: IPersonalBadge) => (
